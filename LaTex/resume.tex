@@ -1,0 +1,30 @@
+\documentclass[]{article}
+
+
+\usepackage[margin=1cm,includehead,landscape]{geometry}
+\usepackage{fancyhdr}
+\usepackage{multicol}
+\usepackage{graphicx}
+\pagestyle{fancy}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{siunitx}
+\usepackage{subfiles}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{fvextra}
+\input{constantes}
+\setlist[itemize]{itemsep=0.1pt, leftmargin=0.5cm}
+\fancyhead[CO]{Résumé \cours}
+\fancyhead[L,RO]{}
+\fancyfoot[L,RO]{}
+
+
+\begin{document}
+\begin{multicols}{3}
+\subfile{01_Buildroot}
+
+\end{multicols}
+\end{document}
