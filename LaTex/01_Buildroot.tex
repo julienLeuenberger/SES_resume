@@ -14,7 +14,7 @@ Il y a un répertoire situé dans \verb!board/friendlyarm/nanopi-neo-plus2! qui 
 \includegraphics[width=0.9\columnwidth]{Figures/buildroot_02.png}
 \end{figure}
 \subsection{Patch buildroot}
-Il faut spécifier le dossier des patchs \verb!make menuconfig! nous on a fait dans \verb!/nanopi-neo-plus2/my_patches! et un dossier par package à patcher. Ensuite la technique consiste à profiter de l'outil git et se mettre dans \verb!/buildroot/output/build/uboot-2020.07! et de faire:
+Il faut spécifier le dossier des patchs \verb!make menuconfig! nous on a fait dans \verb!/nanopi-neo-plus2/my_patches! et un dossier par package à patcher (il faut aussi éditer \verb!ses\-config! pour garder le chemin des patches). Ensuite la technique consiste à profiter de l'outil git et se mettre dans \verb!/buildroot/output/build/uboot-2020.07! et de faire:
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\columnwidth]{Figures/buildroot_03.png}

@@ -1,0 +1,29 @@
+\section{Kernel}
+\subsection{Principaux répertoire du noyau linux}
+Les principaux répertoires du kernel sont listés:
+\begin{itemize}
+\item arch Hardware dependent code
+\item block Generic functions for the block devices
+\item crypto Cryptographic algo. used in the kernel
+\item Documentation Documentation about the kernel
+\item drivers All drivers known by the kernel
+\item fs All filesystem know by the kernel
+\item include kernel include files
+\item init Init code (function start\_kernel)
+\item ipc Interprocess communication
+\item kernel Kernel code, scheduler, mutex, … 
+\item lib different libraries used by the kernel
+\item mm Memory management
+\item net Different protocols, IPv4, IPv6, bluetooth, ...
+\item samples Different examples, kobject, kfifo, ...
+\item security Encrypted keys, SELinux, ...
+\item sound Sound support for Linux kernel
+\item virt Kernel-based virtual machine
+\end{itemize}
+\subsection{Principales méthodes pour sécuriser le noyau}
+Pour configurer linux : \verb!make linux-menuconfig! ou \verb!make linux-xconfig!
+\begin{itemize}
+\item ne pas inclure le Linux kernel \verb!.config! dans le kernel : \verb!Kernel .config support!
+\item protéger la stack en activant la détection de buffer overflow : General architecture-dependant options : [*] Stack Protector buffer overflow detection, [*] Strong Stack Protector
+\item 
+\end{itemize}
