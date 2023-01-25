@@ -21,9 +21,84 @@ Les principaux répertoires du kernel sont listés:
 \item virt Kernel-based virtual machine
 \end{itemize}
 \subsection{Principales méthodes pour sécuriser le noyau}
-Pour configurer linux : \verb!make linux-menuconfig! ou \verb!make linux-xconfig!
+Pour configurer linux : \verb!make linux-menuconfig! ou \verb!make linux-xconfig!. La commande \verb!sysctl! permet de voir les paramètres du kernel
 \begin{itemize}
 \item ne pas inclure le Linux kernel \verb!.config! dans le kernel : \verb!Kernel .config support!
 \item protéger la stack en activant la détection de buffer overflow : General architecture-dependant options : [*] Stack Protector buffer overflow detection, [*] Strong Stack Protector
-\item 
+\item randomize\_va\_space: avoir des adresse aléatoire pour la stack si 1 avec 2 ça ajoute le heap random. Pour le faire : \begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 2 > /proc/sys/kernel/randomize_va_space
+sysctl -w kernel.randomize_va_space=2
+\end{Verbatim}
+\item randomize slab allocator (allocation des kernel obects.o): 
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+[*] Allow slab caches to be merged
+[*] Randomize slab freelist
+[*] Harden slab freelist metadata
+[*] Page allocator randomization
+\end{Verbatim}
+
+\item randomize address of kernel imge
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Kernel feature => [*] Randomize the address of the kernel image
+\end{Verbatim}
+\item mettre le kernel code read-only
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Kernel Feature => [*] Apply r/o permissions of VM areas also to their linear aliases
+\end{Verbatim}
+\item optimiser le kernel pour la performance (gcc -O2) plutôt que pour la taille (gcc -Os)
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+General Setup => Compiler optimization level  [*] Optimize for performance
+\end{Verbatim}
+\item random number generator: si présent sur le hardware
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Device drivers => Character Devices => [*] Hardware Random Number Generator Core support
+[*] Timer IOMEM HW Random Number Generator support 
+[*] Broadcom BCM2835/BCM63xx Random Number Generator support
+\end{Verbatim}
+sinon utiliser le paquet haveged (dans buildroot menuconfig, miscellaneous). Pour voir l'entropy:  \verb!cat /proc/sys/kernel/random/entropy-avail!
+\item l'emplacement \verb!/dev/mem! contient des infos sur kernel memory et process memory. Il faudrait éviter l'accès à d'autres utilisateurs que le root: 
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Kernel Hacking => [*] Filter access to /dev/mem
+=> [*] Filter I/O access to /dev/mem
+\end{Verbatim}
+\item strip l'assembleur du kernel durant le link pour rendre le reverse du code encore plus dure
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Kernel Hacking => Compile time check and compiler options
+=> [ ] Compile the kernel with debug info
+=> [*] Strip assembler-generated symbols during link
+\end{Verbatim}
+\item diminuer l'accès au kernel syslog
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Security options => [*] Restrict unprivileged access to the kernel syslog
+\end{Verbatim}
+\item initialiser tout le stack et le heap avec des zéros
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Security options => Kernel Hardening Options => Memory Initialization
+=> Initialize Kernel Stack =>no automatic initialization (weakest) (if possible)
+[*] Enable heap memory zeroing on allocation by default
+[*] Enable heap memory zeroing on free by default
+\end{Verbatim}
+\item empêcher la copie depuis/vers la mémoire du kernel qui est douteuse (taille de mémoire plus grand que l'objet)
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Security options 
+=> [*] Harden memory copies between kernel and userspace
+[*] Allow usercopy whitelist violations to fallback to object size
+[*] Harden common str/mem functions against buffer overflows
+\end{Verbatim}
+\item un soft en python, régulièrement mis à jour peut tester la config du kernel : \verb!kconfig-hardened-check.py!
 \end{itemize}
+
+\subsection{Software attacks}
+\subsubsection{Buffer overflow}
+L'attaque consiste à utiliser programme qui va aller écrire dans la stack d'un programme, qui est exécutable. On peut par exemple insérér et exécuter un shell code dans une partie exécutable de la stack. Et ensuite on peut faire ce qu'on veut.
+\subsubsection{ret2libc}
+On va aller overflow l'adresse de retour d'une fonction avec l'adresse de system() qui est une fonction standard C library (libc). Elle permet d'exécuter une commande en shell. On va donc tenter d'appeler le bash: \verb!/bin/sh!
+\subsubsection{ROP}
+Return-oriented programming: on va utiliser plein de petits bouts de codes (gadgets) dans toutes les libraries disponibles et on essaie de faire un programme malicieux. ASLR ou le PIE permettent d'éviter ça.
+\subsection{Protections}
+\subsubsection{ASLR}
+ASLR (Adress Space Layout Randomization) randomize\_va\_space randomizes the stack and heap addresses
+\subsubsection{PIE}
+Le PIE (Position Independent Executable) fait en sorte que l'adresse des codes change.
+\subsubsection{Canary}
+C'est une valeur qu'on place à la limite d'un buffer. Si elle est écrasée, on peut savoir qu'il y a eu un buffer overflow.

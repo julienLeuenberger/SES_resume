@@ -1,0 +1,23 @@
+\section{Hardening Linux}
+\subsection{Contôler l'intégrité d'un package, d'un programme}
+En premier télécharger le programme foo et sa signature ensuite il faut vérifier l'intégrité avec
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+gpg --verify foo.tar.gz.asc
+\end{Verbatim}
+Il nous répond qu'il peut pas en donnant une RSA key: par ex. 23948UT5. Donc il faut importer cette clé publique:
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+gpg --keyserver keyserver.ubuntu.com --search-keys 23948UT5
+\end{Verbatim}
+Et relancer la vérification et c'est bon.
+\subsection{Configurer un nouveau package, programme}
+Détarer le package et afficher les options de compilationss:
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+tar xvzf foo.tar.gz
+cd foo
+./configure --help
+\end{Verbatim}
+Si il n'existe pas encore dans buildroot (donc une version inférieure n'a jamais été installé) on le place dans \verb!/buildroot/packages!.
+Et on va faire les choix de versions dans le \verb!foo.mk! et ensuite on le configure avec \verb!make menuconfig! le choix de config sont décris dans \verb!Config.in!
+
+\subsection{Cross-compiler un programme}
+
