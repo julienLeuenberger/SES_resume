@@ -1,0 +1,96 @@
+\section{Firewall IPtables}
+\subsection{Principes de Netfilter et iptables}
+il faut configurer le kernel avec make linux-menuconfig. Iptables est un programme qui sert à configuer Netfilter qui est dans le noyau linux. La frame qui entre passe à tavers la stack du protocol et le netfilter sera appelé. Les principales features de iptables sont stateless et stateful packet filtering, network adress translation, ... On peut créer des parefeu, faire un NAT si on a pas assez d'adresse IP.
+\subsection{Chain-tables}
+Quand un paquet arrive, il traverse différentes chains qui contiennent des tables. Les chains: INPUT (le paquet vient pour le host local), OUTPUT (le paquet est sent by the local host), FORWARD (vient eth0 et va à eth1), PREROUTING et POSTROUTING (used by NAT). Les tables: Fiter table agit sur INPUT, FORWARD et OUTPUT, NAT table (Network Address Translation au moment d'une nouvelle connexion) agit sur PREROUTING, OUTPUT ET POSTROUTING et Mangle table (permet de modifier des paquets) agit sur TOUS les chains.
+\subsection{Différences entre stateless et stateful}
+Stateless: peut importe l'état (est-ce qu'il a déjà eu une connexion, ...), on refuse on accepte.
+
+\subsection{Configuration d'un stateless et d'un stateful}
+Stateless
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+# list all existing rules in the filter table
+iptables -L -n -v -t filter
+# flush tables
+iptables -F -t filter
+# Create new chain
+iptables -N dynamic
+#This command ignores everything coming from 200.200.200.1, -A = append
+iptables -A INPUT -s 200.200.200.1 -j DROP
+# delete previous rule
+iptables -D INPUT -s 200.200.200.1 -j DROP
+# log et drop tout le icmp (ping)
+iptables -A INPUT -p icmp -j LOG
+iptables -A INPUT -p icmp -j DROP
+# Accept the ssh service from host 10.0.0.1
+iptables -A INPUT -p tcp -s 10.0.0.1 -d 0/0 --dport 22 -j ACCEPT
+# Accept the ssh service from subnet 10.0.0.x
+iptables -A INPUT -p tcp -s 10.0.0.0/24 -d 0/0 --dport 22 -j ACCEPT
+# Reject all incoming TCP traffic destined for ports 0 to 1023
+iptables -A INPUT -p tcp -s 0/0 -d 0/0 --dport 0:1023 -j REJECT
+# Reject all outgoing TCP traffic except the one destined for 10.0.0.1
+iptables -A OUTPUT -p tcp -s 0/0 -d ! 10.0.0.1 -j REJECT
+# Drop all SYN packets from 10.0.0.1
+iptables -A INPUT -p tcp -s 10.0.0.1 -d 0/0 --syn -j DROP
+# Change the FORWARD chain to an ACCEPT policy
+iptables -P FORWARD ACCEPT
+# Block a incoming telnet only for the port ppp0
+iptables -A INPUT -p tcp --destination-port telnet -i ppp0 -j DROP
+\end{Verbatim}
+Statefull, -m connbytes : combien de bytes par paquets en moyenne ont déjà été transférés (pour mettre les download on lower priority).
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+# Local traffic interne ok, from inside to outside ok si etabli tout le teste non
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT –j DROP
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -j DROP
+\end{Verbatim}
+Interne permis mais que du ssh depuis l'extérieur
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+iptables -A INPUT -i lo -j ACCEPT // Local traffics are allowed between applications
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+iptables -A INPUT -i eth0 -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+\end{Verbatim}
+Seulement SSH connexion, et sort que de connexions établies
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+iptables -A INPUT -i lo -j ACCEPT // Local traffics are allowed between applications
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+iptables -A INPUT -i eth0 -p tcp --dport 22 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -i eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --sport 22 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+\end{Verbatim}
+Nanopi permet une connexion ssh, sur le port 62200 après authentification, accepter tous les messages de 192.168.0.4
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+iptables -A INPUT -i lo -j ACCEPT // Local traffics are allowed between applications
+iptables -P INPUT DROP
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD DROP
+iptables -N dynamic
+iptables -N net2fw // New chain: Network to Firewall
+iptables -A INPUT -i eth0 -j net2fw
+iptables -A net2fw -m conntrack --ctstate NEW -j dynamic
+iptables -A net2fw -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -A net2fw -p tcp -m tcp --dport 62200 -j ACCEPT
+iptables -A net2fw -j LOG --log-prefix "net2fw:DROP:" --log-level 6
+iptables -A net2fw -j DROP
+#After ssh authentication, insert a new rule in the dynamic chain
+iptables -A dynamic -s 192.168.0.4 -j ACCEPT
+\end{Verbatim}
+
+\subsection{NFQUEUE}
+Les cibles NFQUEUE doivent faire en sorte que le paquet aille à l'userspace. Typiquement l'icmp:
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+iptables -A INPUT -t filter -p icmp -j NFQUEUE --queue-num=0
+\end{Verbatim}
+
+
+
+
