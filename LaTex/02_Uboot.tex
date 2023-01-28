@@ -29,18 +29,18 @@ Pour entrer en uboot mode, il faut appuyer sur une touche durant le boot et on a
 \item setenv    - set environment variables
 \end{itemize}
 Le fichier \verb!boot.cmd! (tranformé en \verb!boot.scr! par une commande montrée plus bas) contient les commandes que u-boot effecture : 
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 setenv bootargs console=ttyS0,115200 earlyprintk root=/dev/mmcblk2p2 rootwait
 ext4load mmc 0 $kernel_addr_r Image
 ext4load mmc 0 $fdt_addr_r nanopi-neo-plus2.dtb
 booti $kernel_addr_r - $fdt_addr_r
-\end{Verbatim}
+\end{lstlisting}
 La commande \verb!booti $kernel_addr_r - $fdt_addr_r! spécifie l'adresse de l'image, de du fdt et le - précise qu'il n'y a pas de initrd. Voir plus tard avec initramfs où on fera autrement\\
 Création d'un fichier \verb!boot.scr! à partir d'un  \verb!boot.cmd!
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 mkimage -C none -A arm64 -T script -d board/friendlyarm/nanopi-neo-plus2/boot.cmd output/images/boot.scr
 
-\end{Verbatim}
+\end{lstlisting}
 \subsection{Configuration de uboot}
 \verb!make uboot-menuconfig! pour configurer (cette config se sauve dans output ubuild uboot-2020.07 .config), \verb!make uboot-rebuild! ou \verb!rm output/build/uboot-xx/.stamp-built! et \verb!make! pour compiler. Après le make 2 fichiers sont créés: \verb!u-boot.itb! et \verb!boot.scr! et se trouvent dans \verb!output/images/!
 \subsection{Sécurisation de uboot}
@@ -50,10 +50,10 @@ mkimage -C none -A arm64 -T script -d board/friendlyarm/nanopi-neo-plus2/boot.cm
 \item Ajouter l'option \verb!-fstatck-protector-strong!.  Qui permet d'éviter les attack en buffer overflow, un programme va donc s'arrêter en cas de détection de stack smashing.
 \end{itemize}
 Pour mettre l'option de proctection de stack de base dans uboot, il faut faire un patch en éditant le Makefile de uboot de cette manière:
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 KBUILD_CFLAGS += $(call cc-option,-fstack-protector-strong)
 #KBUILD_CFLAGS += $(call cc-option,-fno-stack-protector)
-\end{Verbatim}
+\end{lstlisting}
 Et ajouter \verb!stackprot.o! qui contient une fonction \verb!__stack_chk_fail! dans le \verb!/common/! et ajouter la ligne \verb!obj-y += stackprot.o! dans le Makefile du common.
 \subsection{Etapes pour la création de l'image de u-boot.itb}
 L'image \verb!u-boot.itb! contient 3 parties:

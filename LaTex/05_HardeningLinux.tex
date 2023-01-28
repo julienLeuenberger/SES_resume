@@ -1,21 +1,21 @@
 \section{Hardening Linux}
 \subsection{Contôler l'intégrité d'un package, d'un programme}
 En premier télécharger le programme foo et sa signature ensuite il faut vérifier l'intégrité avec
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 gpg --verify foo.tar.gz.asc
-\end{Verbatim}
+\end{lstlisting}
 Il nous répond qu'il peut pas en donnant une RSA key: par ex. 23948UT5. Donc il faut importer cette clé publique:
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 gpg --keyserver keyserver.ubuntu.com --search-keys 23948UT5
-\end{Verbatim}
+\end{lstlisting}
 Et relancer la vérification et c'est bon.
 \subsection{Configurer un nouveau package, programme}
 Détarer le package et afficher les options de compilationss:
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 tar xvzf foo.tar.gz
 cd foo
 ./configure --help
-\end{Verbatim}
+\end{lstlisting}
 Si il n'existe pas encore dans buildroot (donc une version inférieure n'a jamais été installé) on le place dans \verb!/buildroot/packages!.
 Et on va faire les choix de versions dans le \verb!foo.mk! et ensuite on le configure avec \verb!make menuconfig! le choix de config sont décris dans \verb!Config.in!
 
@@ -24,10 +24,10 @@ Et on va faire les choix de versions dans le \verb!foo.mk! et ensuite on le conf
 \subsection{Contrôler les services, les ports ouverts}
 Les services sont lancé au démarrage si leur Startup scripts se trouve dans le \verb!/etc/init.d!
 Le script \verb!rcS! commence les autres scripts (S01..., S02..., not rcK) dans l'ordre alphabétique. On essaie d'avoir le moins de de services possibles. On est obligé de créer un script pour démarrer automatiquement un nouveau service. Si on supprime un S0.... le service ne sera pas débuté au prochain startup. Pour voir les services en en cours: \verb!ps -ale!, le tree: \verb!ps -axjf!, leurs privilèges: \verb!ps aux!, montrer les fichiers ouverts et leurs privilèges: \verb!lsof | grep sshd!. Pour contrôler les ports ouverts, \verb!netstat -atun! montre les tcp and udp, \verb!lso | grep IP! montre les fichiers ouverts et \verb!nmap! (scan all tcp ports for the host 192.168.0.11) et (// scan all udp ports for the host 192.168.0.11)
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 nmap -Pn -p 1-65535 192.168.0.11 
 nmap -sU -Pn -p 1-65535 192.168.0.11 
-\end{Verbatim}
+\end{lstlisting}
 
 \subsection{Contrôler les files systems}
 Leur structure se trouve dans \verb!/etc/stab!
@@ -39,19 +39,19 @@ Les fichiers dans \verb!/etc! must not have group and other bits writable (\verb
 \subsection{Sécuriser le réseau}
 De base, trop d'options sont actvées et donnent trop d'information au hacker. \\
 Disable IPV6
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
 Or sysctl -w /net/ipv6/conf/default/disable_ipv6=1
-\end{Verbatim}
+\end{lstlisting}
 IP source routing must be disabled
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 0 > cat /proc/sys/net/ipv4/conf/all/accept_source_route
 Or sysctl -w net/ipv4/conf/all/accept_source_route=0
-\end{Verbatim}
+\end{lstlisting}
 Forwarding (Routing) of normal and multicast packets should also be deactivated unless 
 expressively needed
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 0 > /proc/sys/net/ipv4/conf/all/forwarding
 echo 0 > /proc/sys/net/ipv6/conf/all/forwarding
 echo 0 > /proc/sys/net/ipv4/conf/all/mc_forwarding
@@ -60,9 +60,9 @@ Or sysctl -w net/ipv4/conf/all/forwarding=0
 sysctl -w net/ipv6/conf/all/forwarding=0
 sysctl -w net/ipv4/conf/all/mc_forwarding=0
 sysctl -w net/ipv6/conf/all/mc_forwarding=0
-\end{Verbatim}
+\end{lstlisting}
 Block ICMP redirect messages
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects
 echo 0 > /proc/sys/net/ipv6/conf/all/accept_redirects
 echo 0 > /proc/sys/net/ipv4/conf/all/secure_redirects
@@ -71,32 +71,32 @@ Or sysctl -w net/ipv4/conf/all/accept_redirects=0
 sysctl -w net/ipv6/conf/all/accept_redirects=0
 sysctl -w net/ipv4/conf/all/secure_redirects=0
 sysctl -w net/ipv4/conf/all/send_redirects =0
-\end{Verbatim}
+\end{lstlisting}
 Enable source route verification in order to prevent spoofing
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 1 > /proc/sys/net/ipv4/conf/default/rp_filter
 Or sysctl -w net/ipv4/conf/default/rp_filter=0
-\end{Verbatim}
+\end{lstlisting}
 Log all malformed packed and ignore icmp bogus ones
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 1 > /proc/sys/net/ipv4/conf/all/log_martians
 echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
 Or sysctl -w net/ipv4/conf/all/log_martians=1
 sysctl -w net/ipv4/icmp_ignore_bogus_error_responses=1
-\end{Verbatim}
+\end{lstlisting}
 Disable ICMP echo and timestamp responses sent via broadcast or multicast
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
 Or sysctl -w net/ipv4/icmp_echo_ignore_broadcasts=1
-\end{Verbatim}
+\end{lstlisting}
 Increase resilience under heavy TCP load by increasing backlog buffer and by enabling 
 syn cookies
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 echo 4096 > /proc/sys/net/ipv4/tcp_max_syn_backlog
 echo 1 > /proc/sys/net/ipv4/tcp_syncookies
 Or sysctl -w net/ipv4/tcp_max_syn_backlog=4096
 sysctl -w net/ipv4/tcp_syncookies=1
-\end{Verbatim}
+\end{lstlisting}
 la commande \verb!systctl -p! montre le contenu \verb!/etc/sysctl.conf!
 
 \subsection{Contrôler-sécuriser les comptes utilisateurs}
@@ -107,10 +107,10 @@ On peut aussi ajouter un message disant que c'est interdit avant le login dans l
 Le root devrait être uniquement possible par console : \verb!echo "ttyS0" > /etc/securetty!. Seulement le root peut accéder au dir root: \verb!chmod 700/root!. On utiliser \verb!sudo! pour prendre les droits de roots. Le PATH du root ne doit pas contenir le current dir ou des writable dir: \verb!PATH not equal .:/tmp:/var/tmp: etc! 
 \subsection{Sécuriser le noyau}
 ASLR (comme en dessus) +write protect kernel make linux-config
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 Kernel Feature => [*] Apply r/o permissions of VM areas also to their linear aliases
 General Setup => [*] Set loadable kernel module data as NX and text as RO
-\end{Verbatim}
+\end{lstlisting}
 Strip-assembler comme plus haut, -fstack-protector, restrict unprivilegiend access to kernel syslog
 
 \subsection{Sécuriser une application}

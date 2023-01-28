@@ -20,20 +20,20 @@ Il faut spécifier le dossier des patchs \verb!make menuconfig! nous on a fait d
 \includegraphics[width=0.9\columnwidth]{Figures/buildroot_03.png}
 \end{figure}
 Faire ensuite toutes les modifications à faire, les stager et faire la commande qui créé le patch au format voulu par buildroot:
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 git diff --cached --stat -p > /buildroot/board/friendlyarm/nanopi-neo-plus2/my_patches/uboot/0001_stack_protector.patch
-\end{Verbatim}
+\end{lstlisting}
 On peut ensuite supprimer le paquet en question dans build et il se téléchargera et patchera automatiquement au prochain \verb!make!.
 \subsection{Configuration de buildroot, u-boot, kernel}
 Pour buildroot, on utilise \verb!make menuconfig! ça se sauvegarde dans \verb!.config! ou dans \verb!configs/ses_defconfig! (seulement les changement sont dans ce fichier, qui est à la base une copy de \verb!friendlyarm_nanopi_neo_plus2_defconfig! qui se situe au même endroit).\\
 Pour u-boot, on va dans \verb!make menuconfig! catégorie bootloaders et ça va se sauver dans 
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 /buildroot/output/build/uboot-xx/configs/nanopi_neo_plus_defconfig
-\end{Verbatim}
+\end{lstlisting}
 Et dans un fragment files qui ne contient que des petites modifications (save old, make new, use diff, add it to this fragment file): 
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 /buildroot/board/friedlyarm/nanopi-neo-plus/uboot-extras.config
-\end{Verbatim}
+\end{lstlisting}
 Pour le kernel, \verb!make linux-menuconfig!, ça save dans \verb!/buildroot/output/build/linux-xx/defconfig! et nous on le copie et le met dans \verb!ses_linux_defconfig!
 \subsection{Génération de la carte SD}
 Pour créer le fichier \verb!sdcard.img! utilise le script \verb!genimage.sh! qui va aller aussi utiliser le fichier \verb!nanopi-neo-plus2/genimage.cfg! qui spécifie les différentes partitions à créer et les images (venant de \verb!output/images!) à mettre dedans.

@@ -4,7 +4,7 @@ Il y a 2 catégories: RAM et Flash. 2 catégories de flash, MTD et MMC/SD-Card.
 En volatile on a: TMPFS et initRAMFS. En MTD (plus ancien), on a JFFS2, YAFFS2 et (SQUASHFS), UBIFS. En MMC/SD-Card, on a EXT3-4, FAT, BTRFS, NILFS, (SQUASHFS), XFS, ZFS et F2FS. En MMC on 3 couches: l'interface, le Flash Translation Layer (bad block mgmnt, garbage collection et wear levelling) et la zone de stockage. MMC/SD-Card a le partition alignement qui est critique, les données sont écrites par blocks ou pages. Pour assurer l'alignement, le début de secteur de chaque partition doit être un multiple de $2^20(=1048576)$ Bytes.
 \subsection{Ext2-3-4}
 A part le 2, ils sont tous journalisés et ils sont rétrocompatibles (référence pour embedded system). Les différentes commandes pour gérer les .ext4 :
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 # Create a partitions (rootfs), start 64MB, length 256MB
 sudo parted /dev/sdb mkpart primary ext4 131072s 655359s
 # Format the partition with the volume label = rootfs
@@ -17,7 +17,7 @@ sudo tune2fs -l /dev/sdb1
 sudo dumpe2fs /dev/sdb1
 # mount an ext4 file system
 mount -t  ext4 /dev/sdb1 /mnt/test // with default options
-\end{Verbatim}
+\end{lstlisting}
 Pour pouvoir utiliser mkfs.ext2 et tune2fs, il faut configuer make busybox-menuconfig, Les principales options sont
 \begin{itemize}
 \item noatime, nodiratime, relatime pour réduire les write non-nécessaires
@@ -47,7 +47,7 @@ Les datas structure génèrent des binary tree. Cow pour copy on write: on ne mo
 Use the storage medium as circular buffer et on écrit toujours à la fin (et on garde compacte). C'est souvent utilsé pour les flash medias. C'est un cow spécifique
 \subsection{SQUASHFS}
 C'est un compressed, read-only fs use in embedded system
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 #Create the squashed file system dir.sqsh for the regular directory /data/config/
 mksquashfs /data/config/ /data/dir.sqsh
 # mount
@@ -57,13 +57,13 @@ umount /dev/sdb2
 dd if=dir.sqsh of=/dev/sdb1
 # and mount the partition as squashfs
 mount /dev/sdb2 /mnt/dir -t squashfs
-\end{Verbatim}
+\end{lstlisting}
 make menuconfig : target pkg, fs and flash : choose squashfs
 \subsection{TMPFS}
 Dynamic FS qui keep tous les files dans une virtual memory. Il met tout dans le cache interne du kernel et il grow and shrinks selon. On peut ajuster sa taille limite. Par rapport à ramfs on peut resize et swaper. Il doit être mount at /dev/shm (fstab). On mount aussi /tmp et /var comme tmpfs
 \subsection{LUKSFS}
 Les datas dans la partition luks sont cryptée. Les datas qui sont utilisées dans le userspace sont décryptée par dmcrypt. Linux Unified Key Setup est le standard Linux pour encrypter un hard disk. Toutes les infos de setup sont stockées dans le header pour une meilleure portabilité. dmcrypt crypts an entire partition. Avantages de luks: comptability via standardization, secure against attacks, support for multiple keys, effective passphrase revocation and free. cryptsetup est un utilitaire pour configurer dmcrypt qui utilise les nodes files /dev/random et /dev/urandom. dmcrypt (device-mapper) crypts target and provides transparent encryption of block en utilsant le kernel crypto api. L'user peut spécifier une ciphers symmtetric, un mode d'encryption, une clé, ... et surtout un new block device dans le /dev/mapper. Toute donnes écrites à ce device seront cryptées, et lues seront décryptées. Pour enable dmcrypt, make linux-menuconfig, device driver, multiple devices drivers support, device mapper support crypt target support et mettre <*>. cryptsetup est un package à ajouter dans menuconfig.
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 # creation d'une passphrase et d'un fichier
 dd if=/dev/urandom of=/buildroot/output/images/passphrase bs=1 count=64
 dd if=/dev/zero of=/buildroot/output/images/part3.luks bs=1G count=2
@@ -85,20 +85,20 @@ cp /buildroot/output/images/rootfs.ext4 /mnt/usrfs/
 #unmount the LUKS partition and remove existing mapping
 umount /mnt/usrfs
 cryptsetup close usrfs1
-\end{Verbatim}
+\end{lstlisting}
 Pour permettre au Nanopi de connaitre la passphrase, ajouter ça au post-build.sh avant le umount: 
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 cp /buildroot/output/images/passphrase /mnt/passphrase
-\end{Verbatim}
+\end{lstlisting}
 Cette passphrase doit être ajouter au fichier de boot.ext4 dans gen-image.cfg et il faut aussi ajouter la partitions luks
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 partition part3 {
 partition-type = 0x83
 image = "part3.luks"
 }
-\end{Verbatim}
+\end{lstlisting}
 Pour faire tout ça au démarrage du Nanopi: \verb!/etc/init.d/s40luks!
-\begin{Verbatim}[breaklines=true, breakanywhere=true]
+\begin{lstlisting}[style=bash]
 # start()
 echo -n "Mounting luks rootfs... "
 echo "Mounting boot partition"
@@ -117,7 +117,7 @@ echo -n "Unmounting luks rootfs"
 umount /mnt
 umount /mnt
 cryptsetup close usrfs1
-\end{Verbatim}
+\end{lstlisting}
 \subsection{LUKS keys}
 Il y a une master key qui est générée à l'initialisation. La passphrase passe à travers un algo (pbkdf2) et vient se combiner avec la master key dans un "crypt master key cipher" et tout ça donne une encrypted master key qui va être stored. Pour crypt ou decrypt une partition on a de nouveau besoin de la master key et de la passphrase. On peut ajouter plusieurs passphrase.
 
