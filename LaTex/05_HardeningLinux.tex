@@ -21,3 +21,115 @@ Et on va faire les choix de versions dans le \verb!foo.mk! et ensuite on le conf
 
 \subsection{Cross-compiler un programme}
 
+\subsection{Contrôler les services, les ports ouverts}
+Les services sont lancé au démarrage si leur Startup scripts se trouve dans le \verb!/etc/init.d!
+Le script \verb!rcS! commence les autres scripts (S01..., S02..., not rcK) dans l'ordre alphabétique. On essaie d'avoir le moins de de services possibles. On est obligé de créer un script pour démarrer automatiquement un nouveau service. Si on supprime un S0.... le service ne sera pas débuté au prochain startup. Pour voir les services en en cours: \verb!ps -ale!, le tree: \verb!ps -axjf!, leurs privilèges: \verb!ps aux!, montrer les fichiers ouverts et leurs privilèges: \verb!lsof | grep sshd!. Pour contrôler les ports ouverts, \verb!netstat -atun! montre les tcp and udp, \verb!lso | grep IP! montre les fichiers ouverts et \verb!nmap! (scan all tcp ports for the host 192.168.0.11) et (// scan all udp ports for the host 192.168.0.11)
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+nmap -Pn -p 1-65535 192.168.0.11 
+nmap -sU -Pn -p 1-65535 192.168.0.11 
+\end{Verbatim}
+
+\subsection{Contrôler les files systems}
+Leur structure se trouve dans \verb!/etc/stab!
+
+\subsection{Contrôler les permission des fichiers, répertoires}
+Les users normaux devraient pas avoir accès au syslog files \verb!/var/log!. Aucun fichier ou repertoires writable devrait exister, à part pour les temporary directories \verb!/tmp!, \verb!/usr/tmp! et \verb!/var/tmp! (\verb!ls /! ou \verb!find /etc -type d -perm -0002 -print!) 
+Les fichiers dans \verb!/etc! must not have group and other bits writable (\verb!find /etc -type f -perm -0002 -print! ou \verb!find /etc -type f -perm -0020 -print!). SUID ou SGID binaries devraient être désactivés: (\verb!find / -perm -4000 -print! ou \verb!find / -perm -2000 -print!). Faudrait forcer \verb!/tmp! à être cleaned durant le shutdown et encore mieux si possible: on met \verb!/tmp! sur un disque en ram
+
+\subsection{Sécuriser le réseau}
+De base, trop d'options sont actvées et donnent trop d'information au hacker. \\
+Disable IPV6
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
+Or sysctl -w /net/ipv6/conf/default/disable_ipv6=1
+\end{Verbatim}
+IP source routing must be disabled
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 0 > cat /proc/sys/net/ipv4/conf/all/accept_source_route
+Or sysctl -w net/ipv4/conf/all/accept_source_route=0
+\end{Verbatim}
+Forwarding (Routing) of normal and multicast packets should also be deactivated unless 
+expressively needed
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 0 > /proc/sys/net/ipv4/conf/all/forwarding
+echo 0 > /proc/sys/net/ipv6/conf/all/forwarding
+echo 0 > /proc/sys/net/ipv4/conf/all/mc_forwarding
+echo 0 > /proc/sys/net/ipv6/conf/all/mc_forwarding
+Or sysctl -w net/ipv4/conf/all/forwarding=0
+sysctl -w net/ipv6/conf/all/forwarding=0
+sysctl -w net/ipv4/conf/all/mc_forwarding=0
+sysctl -w net/ipv6/conf/all/mc_forwarding=0
+\end{Verbatim}
+Block ICMP redirect messages
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects
+echo 0 > /proc/sys/net/ipv6/conf/all/accept_redirects
+echo 0 > /proc/sys/net/ipv4/conf/all/secure_redirects
+echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects
+Or sysctl -w net/ipv4/conf/all/accept_redirects=0
+sysctl -w net/ipv6/conf/all/accept_redirects=0
+sysctl -w net/ipv4/conf/all/secure_redirects=0
+sysctl -w net/ipv4/conf/all/send_redirects =0
+\end{Verbatim}
+Enable source route verification in order to prevent spoofing
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 1 > /proc/sys/net/ipv4/conf/default/rp_filter
+Or sysctl -w net/ipv4/conf/default/rp_filter=0
+\end{Verbatim}
+Log all malformed packed and ignore icmp bogus ones
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 1 > /proc/sys/net/ipv4/conf/all/log_martians
+echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses
+Or sysctl -w net/ipv4/conf/all/log_martians=1
+sysctl -w net/ipv4/icmp_ignore_bogus_error_responses=1
+\end{Verbatim}
+Disable ICMP echo and timestamp responses sent via broadcast or multicast
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+Or sysctl -w net/ipv4/icmp_echo_ignore_broadcasts=1
+\end{Verbatim}
+Increase resilience under heavy TCP load by increasing backlog buffer and by enabling 
+syn cookies
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+echo 4096 > /proc/sys/net/ipv4/tcp_max_syn_backlog
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+Or sysctl -w net/ipv4/tcp_max_syn_backlog=4096
+sysctl -w net/ipv4/tcp_syncookies=1
+\end{Verbatim}
+la commande \verb!systctl -p! montre le contenu \verb!/etc/sysctl.conf!
+
+\subsection{Contrôler-sécuriser les comptes utilisateurs}
+Ils sont affichés dans \verb!/etc/shadow!. Le umask(user file creation right) doit être 0027 dans \verb!cat /etc/profile.d/umask.sh! et ça met 0 dans les others.
+On peut aussi ajouter un message disant que c'est interdit avant le login dans le fichier \verb!/etc/issue!
+
+\subsection{Limiter le login root}
+Le root devrait être uniquement possible par console : \verb!echo "ttyS0" > /etc/securetty!. Seulement le root peut accéder au dir root: \verb!chmod 700/root!. On utiliser \verb!sudo! pour prendre les droits de roots. Le PATH du root ne doit pas contenir le current dir ou des writable dir: \verb!PATH not equal .:/tmp:/var/tmp: etc! 
+\subsection{Sécuriser le noyau}
+ASLR (comme en dessus) +write protect kernel make linux-config
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+Kernel Feature => [*] Apply r/o permissions of VM areas also to their linear aliases
+General Setup => [*] Set loadable kernel module data as NX and text as RO
+\end{Verbatim}
+Strip-assembler comme plus haut, -fstack-protector, restrict unprivilegiend access to kernel syslog
+
+\subsection{Sécuriser une application}
+Ajouter les \verb!CFLAGS="-fPIE -fstack-protector-all -D\_FORTIFY\_SOURCE=2 -ftrapv"! et \verb!LDFLAGS="-Wl,-z,now,-z,relro -z,noexecstack, -pie "! dans le Makefike. 
+\begin{itemize}
+\item PIE: position independant executable pour avoir ROP
+\item -fstack-protector-all: ajout de canary random
+\item D\_FORTIFY\_SOURCE=2: overflow check for memcpy, ...
+\item ftrapv: integer (only) overflow activate a catcheable signal SIGABRT
+\item -Wl,-z,now,-z,relro: tous les symbols dynamiques sont résolut durant le début du porgramme et ça empêche des overwrite attacks
+\end{itemize}
+
+\subsection{Contrôler le démarrage de Linux}
+
+\subsection{Méthodologie OSSTMM simplifiée}
+\begin{enumerate}
+\item Access: compter le nombre d'accès possible, le nombre de port TCP/UDP ouverts (plus haut) + \verb!netsat -atunp!
+\item Authentification: compter le nombre d'accès (ssh, console, ...) avec username et password
+\item Confidentiality: compter le nombre de connexion où les données sont cryptées (ssh est mieux telnet)
+\item Vulnerability, Weekness, Concern: check si un program a des vulnérabilité sur internet, tester les passwords avec les hashcat, .. et tester la robustesse des algorithme de cryptographie
+\item Exposure: Ne pas donner la version de openssh sur nmap, c'est débile
+\end{enumerate}

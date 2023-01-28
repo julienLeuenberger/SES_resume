@@ -1,0 +1,135 @@
+\section{FileSystem}
+\subsection{Différents types de systèmes de fichiers et leur applications}
+Il y a 2 catégories: RAM et Flash. 2 catégories de flash, MTD et MMC/SD-Card.
+En volatile on a: TMPFS et initRAMFS. En MTD (plus ancien), on a JFFS2, YAFFS2 et (SQUASHFS), UBIFS. En MMC/SD-Card, on a EXT3-4, FAT, BTRFS, NILFS, (SQUASHFS), XFS, ZFS et F2FS. En MMC on 3 couches: l'interface, le Flash Translation Layer (bad block mgmnt, garbage collection et wear levelling) et la zone de stockage. MMC/SD-Card a le partition alignement qui est critique, les données sont écrites par blocks ou pages. Pour assurer l'alignement, le début de secteur de chaque partition doit être un multiple de $2^20(=1048576)$ Bytes.
+\subsection{Ext2-3-4}
+A part le 2, ils sont tous journalisés et ils sont rétrocompatibles (référence pour embedded system). Les différentes commandes pour gérer les .ext4 :
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+# Create a partitions (rootfs), start 64MB, length 256MB
+sudo parted /dev/sdb mkpart primary ext4 131072s 655359s
+# Format the partition with the volume label = rootfs
+sudo mkfs.ext4 /dev/sdb1 -L rootfs
+# Modify (on the fly) the ext4 configuration
+sudo tune2fs <options> /dev/sdb1
+# Check the ext4 configuration
+mount
+sudo tune2fs -l /dev/sdb1
+sudo dumpe2fs /dev/sdb1
+# mount an ext4 file system
+mount -t  ext4 /dev/sdb1 /mnt/test // with default options
+\end{Verbatim}
+Pour pouvoir utiliser mkfs.ext2 et tune2fs, il faut configuer make busybox-menuconfig, Les principales options sont
+\begin{itemize}
+\item noatime, nodiratime, relatime pour réduire les write non-nécessaires
+\item Data=journal (journal avant écriture) safest
+\item Data=ordered (data d'abord) de base
+\item Data=writeback (pas d'ordre)
+\item acl : support POSIX Access Control Lists
+\item default: options qu'on met dans \verb!/etc/fstab!
+\end{itemize}
+\subsection{Différents FS}
+\subsubsection{BTRFS}
+B-Tree filesystem
+\subsubsection{F2FS}
+Flash-Friendly File System, log filesystem with many parameter et fonctionne bien sur beaucoup de support
+\subsubsection{NILFS2}
+New Implementation of a Log-structured File System. Log and B-tree avec un userspace garbage collector
+\subsubsection{XFS}
+Journaling filesystem, support huge filesystems mais ne support pas bien la perte en mode standby
+\subsubsection{ZFS}
+Zettabyte ($10^21$) File System. B-tree with strong data integrity, support huge fs mais pas fait pour de l'embarqué (lot of ram)
+\subsection{Journal, B\_tree/Cow, log filesystem}
+\subsubsection{Journal}
+Garde une trace de toutes les modifications dans un journal. Cela permet de restored corrupted file. Les modifs vont d'abord dans le journal ensuite dans le disk. En cas de corruption: soit le journal est consistent (on replay le journal au mount time), soit il l'est pas et on drop les modifications
+\subsubsection{B-Tree/CoW}
+Les datas structure génèrent des binary tree. Cow pour copy on write: on ne modifie pas tout de suite l'original et on fait un copie plus loin et on attend le commit. Si il y a un interruption, on garde l'ancien.
+\subsubsection{Log filesystem}
+Use the storage medium as circular buffer et on écrit toujours à la fin (et on garde compacte). C'est souvent utilsé pour les flash medias. C'est un cow spécifique
+\subsection{SQUASHFS}
+C'est un compressed, read-only fs use in embedded system
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+#Create the squashed file system dir.sqsh for the regular directory /data/config/
+mksquashfs /data/config/ /data/dir.sqsh
+# mount
+mount -o loop -t squashfs /data/dir.sqsh /mnt/dir
+#it is possible to copy the dir.sqsh to an unmount part with dd
+umount /dev/sdb2
+dd if=dir.sqsh of=/dev/sdb1
+# and mount the partition as squashfs
+mount /dev/sdb2 /mnt/dir -t squashfs
+\end{Verbatim}
+make menuconfig : target pkg, fs and flash : choose squashfs
+\subsection{TMPFS}
+Dynamic FS qui keep tous les files dans une virtual memory. Il met tout dans le cache interne du kernel et il grow and shrinks selon. On peut ajuster sa taille limite. Par rapport à ramfs on peut resize et swaper. Il doit être mount at /dev/shm (fstab). On mount aussi /tmp et /var comme tmpfs
+\subsection{LUKSFS}
+Les datas dans la partition luks sont cryptée. Les datas qui sont utilisées dans le userspace sont décryptée par dmcrypt. Linux Unified Key Setup est le standard Linux pour encrypter un hard disk. Toutes les infos de setup sont stockées dans le header pour une meilleure portabilité. dmcrypt crypts an entire partition. Avantages de luks: comptability via standardization, secure against attacks, support for multiple keys, effective passphrase revocation and free. cryptsetup est un utilitaire pour configurer dmcrypt qui utilise les nodes files /dev/random et /dev/urandom. dmcrypt (device-mapper) crypts target and provides transparent encryption of block en utilsant le kernel crypto api. L'user peut spécifier une ciphers symmtetric, un mode d'encryption, une clé, ... et surtout un new block device dans le /dev/mapper. Toute donnes écrites à ce device seront cryptées, et lues seront décryptées. Pour enable dmcrypt, make linux-menuconfig, device driver, multiple devices drivers support, device mapper support crypt target support et mettre <*>. cryptsetup est un package à ajouter dans menuconfig.
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+# creation d'une passphrase et d'un fichier
+dd if=/dev/urandom of=/buildroot/output/images/passphrase bs=1 count=64
+dd if=/dev/zero of=/buildroot/output/images/part3.luks bs=1G count=2
+#create a LUKS partition
+echo YES | sudo cryptsetup --debug --pbkdf pbkdf2 luksFormat
+/buildroot/output/images/part3.luks /buildroot/output/images/passphrase
+#dump the header information
+sudo cryptsetup luksDump /buildroot/output/images/part3.luks
+#create a mapping /dev/mapper/usrfs1
+cryptsetup open --debug --type luks --key-file
+/buildroot/output/images/passphrase /buildroot/output/images/part3.luks usrfs1
+#format the LUKS partition as EXT4
+mkfs.ext4 -L luks /dev/mapper/usrfs1
+#mount the LUKS partition to /mnt/usrfs
+mkdir /mnt/usrfs
+mount /dev/mapper/usrfs1 /mnt/usrfs
+#copy rootfs files to LUKS partition
+cp /buildroot/output/images/rootfs.ext4 /mnt/usrfs/
+#unmount the LUKS partition and remove existing mapping
+umount /mnt/usrfs
+cryptsetup close usrfs1
+\end{Verbatim}
+Pour permettre au Nanopi de connaitre la passphrase, ajouter ça au post-build.sh avant le umount: 
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+cp /buildroot/output/images/passphrase /mnt/passphrase
+\end{Verbatim}
+Cette passphrase doit être ajouter au fichier de boot.ext4 dans gen-image.cfg et il faut aussi ajouter la partitions luks
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+partition part3 {
+partition-type = 0x83
+image = "part3.luks"
+}
+\end{Verbatim}
+Pour faire tout ça au démarrage du Nanopi: \verb!/etc/init.d/s40luks!
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+# start()
+echo -n "Mounting luks rootfs... "
+echo "Mounting boot partition"
+mount /dev/mmcblk2p1 /mnt
+echo -n "Unlocking luks rootfs"
+cryptsetup open --type luks --key-file /mnt/passphrase /dev/mmcblk2p3
+usrfs1
+echo "Unmounting boot partition"
+umount /mnt
+echo "Mounting part3"
+mount /dev/mapper/usrfs1 /mnt
+mount /mnt/rootfs.ext4 /mnt
+echo "LUKS rootfs ready"
+# stop()
+echo -n "Unmounting luks rootfs"
+umount /mnt
+umount /mnt
+cryptsetup close usrfs1
+\end{Verbatim}
+\subsection{LUKS keys}
+Il y a une master key qui est générée à l'initialisation. La passphrase passe à travers un algo (pbkdf2) et vient se combiner avec la master key dans un "crypt master key cipher" et tout ça donne une encrypted master key qui va être stored. Pour crypt ou decrypt une partition on a de nouveau besoin de la master key et de la passphrase. On peut ajouter plusieurs passphrase.
+
+\subsection{InitramFS}
+Permet d'effectuer des tâches le plus vite possible à travers un script /init qui peut s'occuper de copier et gérer les partitions luks. Initrams est cpio archive file, il peut être générer à la main et il contient at least one file called /init qui va être lancer par le kernel. Il a des commandes très basique: mount, exec, ...
+
+\subsection{Création d'un initramFS}
+On PC, NanoPi rootfs is in this directory: /buildroot/output/target/\\
+\textbf{Principle to build an initramfs :}
+\begin{enumerate}
+\item Copy the right files into a directory (\$HOME/ramfs)
+\item Copy these files in a cpio archive file
+\item Compress this file
+\item Add the uboot header
+\end{enumerate}
