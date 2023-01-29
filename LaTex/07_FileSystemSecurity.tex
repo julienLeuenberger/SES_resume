@@ -60,7 +60,10 @@ et faut ensuite ajouter dans fstab
 \end{Verbatim}
 
 \subsection{Mémorisation des mots de passe sous Linux}
-Pour voir les mots de passes: \verb!cat /etc/shadow! (userame, \$6(sha512)ou 1 (md5)\$saltvalue\$passwordCrypt:lastchanged(days since01.01.1970):4:5:6(number of days between password change).
+Pour voir les mots de passes: \verb!cat /etc/shadow!
+\begin{Verbatim}[breaklines=true, breakanywhere=true]
+userame:$6(sha512)ou 1 (md5)$saltvalue$passwordCrypt:lastchanged(days since01.01.1970):4:5:6(number of days between password change)
+\end{Verbatim}
 
 \subsection{Casser un mot de passe}
 5 types: Dictionary (file with words: a dictionary), Combinator (use 2 dict), Hybrid (dict + some letters), Brute force (try every combination) et Mask (brute force with inputs).

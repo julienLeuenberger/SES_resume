@@ -20,10 +20,16 @@ Si il n'existe pas encore dans buildroot (donc une version inférieure n'a jamai
 Et on va faire les choix de versions dans le \verb!foo.mk! et ensuite on le configure avec \verb!make menuconfig! le choix de config sont décris dans \verb!Config.in!
 
 \subsection{Cross-compiler un programme}
+Ajout de host et prefix
+\begin{lstlisting}[style=console]
+./configure --host=aarch64-none-linux-gnu --prefix=/home/dir
+make 
+make install
+\end{lstlisting}
 
 \subsection{Contrôler les services, les ports ouverts}
-Les services sont lancé au démarrage si leur Startup scripts se trouve dans le \verb!/etc/init.d!
-Le script \verb!rcS! commence les autres scripts (S01..., S02..., not rcK) dans l'ordre alphabétique. On essaie d'avoir le moins de de services possibles. On est obligé de créer un script pour démarrer automatiquement un nouveau service. Si on supprime un S0.... le service ne sera pas débuté au prochain startup. Pour voir les services en en cours: \verb!ps -ale!, le tree: \verb!ps -axjf!, leurs privilèges: \verb!ps aux!, montrer les fichiers ouverts et leurs privilèges: \verb!lsof | grep sshd!. Pour contrôler les ports ouverts, \verb!netstat -atun! montre les tcp and udp, \verb!lso | grep IP! montre les fichiers ouverts et \verb!nmap! (scan all tcp ports for the host 192.168.0.11) et (// scan all udp ports for the host 192.168.0.11)
+Les services sont lancés au démarrage si leur Startup scripts se trouve dans le \verb!/etc/init.d!
+Le script \verb!rcS! commence les autres scripts (S01..., S02..., not rcK) dans l'ordre alphabétique. On essaie d'avoir le moins de services possibles. On est obligé de créer un script pour démarrer automatiquement un nouveau service. Si on supprime un S0.... le service ne sera pas débuté au prochain startup. Pour voir les services en en cours: \verb!ps -ale!, le tree: \verb!ps -axjf!, leurs privilèges: \verb!ps aux!, montrer les fichiers ouverts et leurs privilèges: \verb!lsof | grep sshd!. Pour contrôler les ports ouverts, \verb!netstat -atun! montre les tcp and udp, \verb!lso | grep IP! montre les fichiers ouverts et \verb!nmap! (scan all tcp ports for the host 192.168.0.11) et (// scan all udp ports for the host 192.168.0.11)
 \begin{lstlisting}[style=bash]
 nmap -Pn -p 1-65535 192.168.0.11 
 nmap -sU -Pn -p 1-65535 192.168.0.11 
@@ -114,7 +120,11 @@ General Setup => [*] Set loadable kernel module data as NX and text as RO
 Strip-assembler comme plus haut, -fstack-protector, restrict unprivilegiend access to kernel syslog
 
 \subsection{Sécuriser une application}
-Ajouter les \verb!CFLAGS="-fPIE -fstack-protector-all -D\_FORTIFY\_SOURCE=2 -ftrapv"! et \verb!LDFLAGS="-Wl,-z,now,-z,relro -z,noexecstack, -pie "! dans le Makefike. 
+Ajouter les \verb!CFLAGS! et \verb!LDFLAGS! suivant
+\begin{lstlisting}[style=bash]
+CFLAGS="-fPIE -fstack-protector-all -D\_FORTIFY\_SOURCE=2 -ftrapv"
+LDFLAGS="-Wl,-z,now,-z,relro -z,noexecstack, -pie"
+\end{lstlisting}
 \begin{itemize}
 \item PIE: position independant executable pour avoir ROP
 \item -fstack-protector-all: ajout de canary random

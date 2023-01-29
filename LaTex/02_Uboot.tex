@@ -75,7 +75,7 @@ La commande \verb!aarch64-linux-strip u-boot! (la commande \verb!aarch64-linux-o
 uImage est l'image Linux au format uboot elle est créée lors du make. Dans le process du boot.cmd, uboot va spécifier son emplacement dans la variable d'environnement \verb!$kernel_addr_r=0x40080000!
 
 \subsection{Flattened Device Tree}
-Le FTD contient les informations sur le hardware que linux va utiliser pour sa configuration. Le fabricant du uP a surement écrit \verb!sun50i-h5-nanopi-neo-plus2.dts! et on le passe en \verb!.dtb! avec la commande \verb! dtc board.dts –o board.dtb!. Lors du boot.cmd on précise l'adresse de cd \verb!.dtb! dans la variable d'environnement \verb!$fdt_addr_r=0x4FA00000!
+Le FTD contient les informations sur le hardware que linux va utiliser pour sa configuration. Le fabricant du uP a surement écrit \verb!sun50i-h5-nanopi-neo-plus2.dts! et on le passe en \verb!.dtb! avec la commande \verb! dtc board.dts -o board.dtb!. Lors du boot.cmd on précise l'adresse de ce \verb!.dtb! dans la variable d'environnement \verb!$fdt_addr_r=0x4FA00000!
 
 \subsection{Mapping de la SDCard}
 La carte SD contient ces éléments

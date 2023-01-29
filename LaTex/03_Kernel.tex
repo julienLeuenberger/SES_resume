@@ -90,7 +90,7 @@ Security options
 
 \subsection{Software attacks}
 \subsubsection{Buffer overflow}
-L'attaque consiste à utiliser programme qui va aller écrire dans la stack d'un programme, qui est exécutable. On peut par exemple insérér et exécuter un shell code dans une partie exécutable de la stack. Et ensuite on peut faire ce qu'on veut.
+L'attaque consiste à utiliser un programme qui va aller écrire dans la stack d'un programme, qui est exécutable. On peut par exemple insérér et exécuter un shell code dans une partie exécutable de la stack. Et ensuite on peut faire ce qu'on veut.
 \subsubsection{ret2libc}
 On va aller overflow l'adresse de retour d'une fonction avec l'adresse de system() qui est une fonction standard C library (libc). Elle permet d'exécuter une commande en shell. On va donc tenter d'appeler le bash: \verb!/bin/sh!
 \subsubsection{ROP}

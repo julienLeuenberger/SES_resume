@@ -8,13 +8,13 @@ Ce qui est manquant dans le répértoire dans le dossier output sera recompilé 
 \subsection{Principe de fonctionnement}
 Basé sur des fichiers \verb!make! \verb!kconfig!, buildroot est un outil qui automatise le process de construction d'un système Linux embarqué en utilisant la cross-compilation. Lors de la commande \verb!make! il va s'occuper de compiler l'entier du système et préparer une image complète et prête pour l'utilisation.
 \subsection{Configuration pour un hardware donné}
-Il y a un répertoire situé dans \verb!board/friendlyarm/nanopi-neo-plus2! qui contient plusieurs fichiers intéressants. On y retrouve notamment le fichier \verb!nanopi-neo-plus2/nanopi-neo-plus2.dts! qui contient le FTD ("Flattened Device Tree") qui décrit le hardware. On indique donc à buildroot l'emplacement de ce fichier avec la commande \verb!menuconfig!. Autres fichiers intéressants : 
+Il y a un répertoire situé dans la figure de dessous qui contient plusieurs fichiers intéressants. On y retrouve notamment le fichier \verb!nanopi-neo-plus2/nanopi-neo-plus2.dts! qui contient le FTD ("Flattened Device Tree") qui décrit le hardware. On indique donc à buildroot l'emplacement de ce fichier avec la commande \verb!menuconfig!. Autres fichiers intéressants : 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\columnwidth]{Figures/buildroot_02.png}
 \end{figure}
 \subsection{Patch buildroot}
-Il faut spécifier le dossier des patchs \verb!make menuconfig! nous on a fait dans \verb!/nanopi-neo-plus2/my_patches! et un dossier par package à patcher (il faut aussi éditer \verb!ses\-config! pour garder le chemin des patches). Ensuite la technique consiste à profiter de l'outil git et se mettre dans \verb!/buildroot/output/build/uboot-2020.07! et de faire:
+Il faut spécifier le dossier des patchs \verb!make menuconfig! nous on a fait dans \verb!/nanopi-neo-plus2/my_patches! et un dossier par package à patcher (il faut aussi éditer \verb!ses_config! pour garder le chemin des patches). Ensuite la technique consiste à profiter de l'outil git et se mettre dans \verb!/buildroot/output/build/uboot-2020.07! et de faire:
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\columnwidth]{Figures/buildroot_03.png}

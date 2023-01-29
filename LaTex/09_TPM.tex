@@ -34,7 +34,12 @@ md5sum file
 a6a0e8d0522e2c5de921b1c455506320
 \end{Verbatim}
 \subsubsection{Signature digitale}
-Objectif : intégrité du message et authentification de l'origine du message. 2 steps: une hash function qui va créer l'empreinte du message et cette empreinte va être encrypté par un asymetric cipher et une clé privée. Bob reçoit le message est en clair avec la signature. Il va passer le message dans un cipher et comparer le résultat à la décryption de la signature à l'aide de la clé publique d'Alice.
+Objectif : intégrité du message et authentification de l'origine du message. 
+%2 steps: une hash function qui va créer l'empreinte du message et cette empreinte va être encrypté par un asymetric cipher et une clé privée. Bob reçoit le message est en clair avec la signature. Il va passer le message dans un cipher et comparer le résultat à la décryption de la signature à l'aide de la clé publique d'Alice.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\columnwidth]{Figures/tpm_01.png}
+\end{figure}
 \begin{Verbatim}[breaklines=true, breakanywhere=true]
 # 3 même ligne que Asym cipher
 # sign t.txt with public key
