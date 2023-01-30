@@ -36,7 +36,7 @@ Et dans un fragment files qui ne contient que des petites modifications (save ol
 \end{lstlisting}
 Pour le kernel, \verb!make linux-menuconfig!, ça save dans \verb!/buildroot/output/build/linux-xx/defconfig! et nous on le copie et le met dans \verb!ses_linux_defconfig!
 \subsection{Génération de la carte SD}
-Pour créer le fichier \verb!sdcard.img! utilise le script \verb!genimage.sh! qui va aller aussi utiliser le fichier \verb!nanopi-neo-plus2/genimage.cfg! qui spécifie les différentes partitions à créer et les images (venant de \verb!output/images!) à mettre dedans.
+Pour créer le fichier \verb!sdcard.img!, on utilise le script \verb!genimage.sh! qui va aller aussi utiliser le fichier \verb!nanopi-neo-plus2/genimage.cfg! qui spécifie les différentes partitions à créer et les images (venant de \verb!output/images!) à mettre dedans.
 
 \subsection{Génération du rootfs}
 Il est copié depuis \verb!/buildroot/system/skeleton! pour le mettre dans \verb!/buildroot/output/target!. Il est ensuite possible d'ajouter des fichiers et des répértoires avec le \verb!/nanopi-neo-plus2/rootfs_overlay!. Après la commande \verb!make! le pseudo rootfs est créé et placé dans un des fichiers images de sorties \verb!rootfs.xxx!

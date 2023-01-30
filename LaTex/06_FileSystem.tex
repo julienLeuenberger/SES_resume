@@ -35,7 +35,7 @@ Flash-Friendly File System, log filesystem with many parameter et fonctionne bie
 \subsubsection{NILFS2}
 New Implementation of a Log-structured File System. Log and B-tree avec un userspace garbage collector
 \subsubsection{XFS}
-Journaling filesystem, support huge filesystems mais ne support pas bien la perte en mode standby
+Journaling filesystem, support huge filesystems mais ne supporte pas bien la perte en mode standby
 \subsubsection{ZFS}
 Zettabyte ($10^21$) File System. B-tree with strong data integrity, support huge fs mais pas fait pour de l'embarqué (lot of ram)
 \subsection{Journal, B\_tree/Cow, log filesystem}
@@ -62,7 +62,7 @@ make menuconfig : target pkg, fs and flash : choose squashfs
 \subsection{TMPFS}
 Dynamic FS qui keep tous les files dans une virtual memory. Il met tout dans le cache interne du kernel et il grow and shrinks selon. On peut ajuster sa taille limite. Par rapport à ramfs on peut resize et swaper. Il doit être mount at /dev/shm (fstab). On mount aussi /tmp et /var comme tmpfs
 \subsection{LUKSFS}
-Les datas dans la partition luks sont cryptée. Les datas qui sont utilisées dans le userspace sont décryptée par dmcrypt. Linux Unified Key Setup est le standard Linux pour encrypter un hard disk. Toutes les infos de setup sont stockées dans le header pour une meilleure portabilité. dmcrypt crypts an entire partition. Avantages de luks: comptability via standardization, secure against attacks, support for multiple keys, effective passphrase revocation and free. cryptsetup est un utilitaire pour configurer dmcrypt qui utilise les nodes files /dev/random et /dev/urandom. dmcrypt (device-mapper) crypts target and provides transparent encryption of block en utilsant le kernel crypto api. L'user peut spécifier une ciphers symmtetric, un mode d'encryption, une clé, ... et surtout un new block device dans le /dev/mapper. Toute donnes écrites à ce device seront cryptées, et lues seront décryptées. Pour enable dmcrypt, make linux-menuconfig, device driver, multiple devices drivers support, device mapper support crypt target support et mettre \verb!<*>!. cryptsetup est un package à ajouter dans menuconfig.
+Les datas dans la partition luks sont cryptées. Les datas qui sont utilisées dans le userspace sont décryptées par dmcrypt. Linux Unified Key Setup est le standard Linux pour encrypter un hard disk. Toutes les infos de setup sont stockées dans le header pour une meilleure portabilité. dmcrypt crypts an entire partition. Avantages de luks: comptability via standardization, secure against attacks, support for multiple keys, effective passphrase revocation and free. cryptsetup est un utilitaire pour configurer dmcrypt qui utilise les nodes files /dev/random et /dev/urandom. dmcrypt (device-mapper) crypts target and provides transparent encryption of block en utilsant le kernel crypto api. L'user peut spécifier une ciphers symmtetric, un mode d'encryption, une clé, ... et surtout un new block device dans le /dev/mapper. Toute données écrites à ce device seront cryptées, et lues seront décryptées. Pour enable dmcrypt, make linux-menuconfig, device driver, multiple devices drivers support, device mapper support crypt target support et mettre \verb!<*>!. cryptsetup est un package à ajouter dans menuconfig.
 \begin{lstlisting}[style=bash]
 # creation d'une passphrase et d'un fichier
 dd if=/dev/urandom of=/buildroot/output/images/passphrase bs=1 count=64

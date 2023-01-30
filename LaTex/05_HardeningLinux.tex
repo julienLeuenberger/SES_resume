@@ -22,7 +22,7 @@ Et on va faire les choix de versions dans le \verb!foo.mk! et ensuite on le conf
 \subsection{Cross-compiler un programme}
 Ajout de host et prefix
 \begin{lstlisting}[style=console]
-./configure --host=aarch64-none-linux-gnu --prefix=/home/dir
+./configure --host=aarch64-none-linux-gnu --prefix=/root/install
 make 
 make install
 \end{lstlisting}
@@ -43,7 +43,7 @@ Les users normaux devraient pas avoir accès au syslog files \verb!/var/log!. Au
 Les fichiers dans \verb!/etc! must not have group and other bits writable (\verb!find /etc -type f -perm -0002 -print! ou \verb!find /etc -type f -perm -0020 -print!). SUID ou SGID binaries devraient être désactivés: (\verb!find / -perm -4000 -print! ou \verb!find / -perm -2000 -print!). Faudrait forcer \verb!/tmp! à être cleaned durant le shutdown et encore mieux si possible: on met \verb!/tmp! sur un disque en ram
 
 \subsection{Sécuriser le réseau}
-De base, trop d'options sont actvées et donnent trop d'information au hacker. \\
+De base, trop d'options sont actvées et donnent trop d'informations au hacker. \\
 Disable IPV6
 \begin{lstlisting}[style=bash]
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
@@ -134,7 +134,7 @@ LDFLAGS="-Wl,-z,now,-z,relro -z,noexecstack, -pie"
 \end{itemize}
 
 \subsection{Contrôler le démarrage de Linux}
-
+Une solution, dans le but de vérifier qu'on boot sur le bon kernel, consisterait à stocker le hash du kernel sur la partition de boot et avant de booter linux faire le hash de kernel depuis uboot et comparer avec la valeur en partition. 
 \subsection{Méthodologie OSSTMM simplifiée}
 \begin{enumerate}
 \item Access: compter le nombre d'accès possible, le nombre de port TCP/UDP ouverts (plus haut) + \verb!netsat -atunp!
